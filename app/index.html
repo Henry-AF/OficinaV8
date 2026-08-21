@@ -520,7 +520,8 @@ vids.forEach(function(v){v.addEventListener('play',function(){vids.forEach(funct
       try {
         var url = new URL(link.href);
         var texto = url.searchParams.get('text') || '';
-        url.searchParams.set('text', texto + ' [origem: ' + origem + ']');
+        var novoTexto = texto + ' [origem: ' + origem + ']';
+        url.search = 'text=' + encodeURIComponent(novoTexto);
         link.href = url.toString();
       } catch (e) {}
     }
