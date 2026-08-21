@@ -54,6 +54,35 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="image" href="assets/carro.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1989829991635486');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1989829991635486&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+
+<!-- Microsoft Clarity -->
+<script type="text/javascript">
+(function(c,l,a,r,i,t,y){
+  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+})(window, document, "clarity", "script", "y5wvon6r6r");
+</script>
+<!-- End Microsoft Clarity -->
+
 <style>
 :root{
   --bg:#0b0b0d; --bg2:#111114; --card:#16161a; --line:#232329;
@@ -475,6 +504,33 @@ var t=document.getElementById('ticker');t.innerHTML+=t.innerHTML;
 // Um vídeo pausa o outro
 var vids=document.querySelectorAll('.gal-item video');
 vids.forEach(function(v){v.addEventListener('play',function(){vids.forEach(function(o){if(o!==v)o.pause()})})});
+
+// Rastreamento de origem (UTM) nos links do WhatsApp
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var utmSource = params.get('utm_source');
+  var utmMedium = params.get('utm_medium');
+  var utmCampaign = params.get('utm_campaign');
+  var partes = [utmSource, utmMedium, utmCampaign].filter(Boolean);
+  var origem = partes.length ? partes.join('/') : 'direto';
+
+  var waLinks = document.querySelectorAll('a[href^="https://wa.me/5513996821599"]');
+  waLinks.forEach(function(link){
+    if (partes.length) {
+      try {
+        var url = new URL(link.href);
+        var texto = url.searchParams.get('text') || '';
+        var novoTexto = texto + ' [origem: ' + origem + ']';
+        url.search = 'text=' + encodeURIComponent(novoTexto);
+        link.href = url.toString();
+      } catch (e) {}
+    }
+    link.addEventListener('click', function(){
+      if (typeof fbq === 'function') fbq('track', 'Contact');
+      if (typeof clarity === 'function') clarity('set', 'clicou_whatsapp', origem);
+    });
+  });
+})();
 </script>
 </body>
 </html>
