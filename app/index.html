@@ -52,36 +52,66 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="image" href="assets/carro.jpg">
+<link rel="preload" as="image" href="assets/carro.jpg" fetchpriority="high">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 
-<!-- Meta Pixel Code -->
+<!-- Meta Pixel + Microsoft Clarity (carregamento diferido) -->
+<!--
+  Os scripts de terceiros (Meta Pixel e Clarity) são pesados e, quando
+  carregados de forma síncrona no load, disputam a thread principal e pioram
+  o INP — crítico no tráfego mobile/in-app (Facebook/Instagram WebView).
+  Aqui eles são inicializados na primeira interação do usuário ou, na falta
+  dela, por um fallback de tempo — mantendo o disparo do PageView/tracking
+  sem travar a renderização e a primeira interação da página.
+-->
 <script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1989829991635486');
-fbq('track', 'PageView');
+(function(){
+  var carregado = false;
+  function carregarTerceiros(){
+    if (carregado) return;
+    carregado = true;
+
+    // Meta Pixel
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1989829991635486');
+    fbq('track', 'PageView');
+
+    // Microsoft Clarity
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "y5wvon6r6r");
+  }
+
+  // Carrega na primeira interação (a mais cedo entre estes eventos)
+  var eventos = ['pointerdown','touchstart','scroll','keydown','mousemove'];
+  function aoInteragir(){
+    carregarTerceiros();
+    eventos.forEach(function(ev){ window.removeEventListener(ev, aoInteragir); });
+  }
+  eventos.forEach(function(ev){ window.addEventListener(ev, aoInteragir, {passive:true, once:true}); });
+
+  // Fallback: garante o disparo do PageView mesmo sem interação (bounce rápido),
+  // mas fora da janela crítica de renderização inicial.
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(carregarTerceiros, {timeout: 2500});
+  } else {
+    setTimeout(carregarTerceiros, 2000);
+  }
+})();
 </script>
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=1989829991635486&ev=PageView&noscript=1"
 /></noscript>
-<!-- End Meta Pixel Code -->
-
-<!-- Microsoft Clarity -->
-<script type="text/javascript">
-(function(c,l,a,r,i,t,y){
-  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
-  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-})(window, document, "clarity", "script", "y5wvon6r6r");
-</script>
-<!-- End Microsoft Clarity -->
+<!-- End Meta Pixel + Clarity -->
 
 <style>
 :root{
@@ -501,9 +531,23 @@ document.querySelectorAll('#navLinks a').forEach(function(a){
 });
 // Duplica o ticker para loop contínuo
 var t=document.getElementById('ticker');t.innerHTML+=t.innerHTML;
-// Um vídeo pausa o outro
+// Um vídeo pausa o outro + toque no vídeo inicia a reprodução (evita "dead click")
 var vids=document.querySelectorAll('.gal-item video');
-vids.forEach(function(v){v.addEventListener('play',function(){vids.forEach(function(o){if(o!==v)o.pause()})})});
+vids.forEach(function(v){
+  v.addEventListener('play',function(){vids.forEach(function(o){if(o!==v)o.pause()})});
+  v.addEventListener('click',function(){ if(v.paused){ var p=v.play(); if(p&&p.catch)p.catch(function(){}); } });
+});
+
+// Card de serviço inteiro clicável → leva ao WhatsApp (reduz "dead click" e melhora conversão)
+document.querySelectorAll('.svc').forEach(function(card){
+  var link=card.querySelector('a[href]');
+  if(!link)return;
+  card.style.cursor='pointer';
+  card.addEventListener('click',function(e){
+    if(e.target.closest('a'))return; // clique já foi no próprio botão/link
+    link.click();
+  });
+});
 
 // Rastreamento de origem (UTM) nos links do WhatsApp
 (function(){
